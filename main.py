@@ -17,11 +17,13 @@ class Patient(BaseModel):
     weight: Annotated[float, Field(..., gt = 0, description = 'Weight of the patient in kgs')]
 
 @computed_field
+@property
 def bmi(self) -> float:
     bmi = round(self.weight/(self.height**2), 2)
     return bmi
 
 @computed_field
+@property
 def verdict(self) -> str:
 
     if self.bmi < 18.5:
@@ -35,12 +37,12 @@ def verdict(self) -> str:
 
 class PatientUpdate(BaseModel):
     
-    name: Annotated[Optional[str], Field(default = None)]
-    city: Annotated[Optional[str], Field(default =  None)]
-    age: Annotated[Optional[int], Field(default = None, gt = 0)]
-    gender: Annotated[Optional[Literal['male', 'female', 'others']], Field(default = None)]
-    height: Annotated[Optional[float], Field(default = None, gt = 0)]
-    weight: Annotated[Optional[float], Field(default = None, gt = 0)]
+    name: Optional[str] = None
+    city: Optional[str] =  None
+    age: Optional[int] = Field(None, gt = 0, lt = 120)
+    gender: Optional[Literal['male', 'female', 'others']] = None
+    height: Optional[float] = Field(None, gt = 0)
+    weight: Optional[float] = Field(None, gt = 0)
 
 
 def load_data():
@@ -106,7 +108,7 @@ def create_patient(patient: Patient):#Variable which stores new patient data and
         raise HTTPException(status_code = 404, detail = 'Patient already exists!')
 
     # New patient add to the data
-    data[patient.id] = patient.model_dump(exclude = ['id'])
+    data[patient.id] = patient.model_dump(exclude = {'id'})
 
     # Save into json file
     save_data(data)
@@ -133,7 +135,7 @@ def update_patient(patient_id: str, patient_update: PatientUpdate):
     patient_pydantic_obj = Patient(**existing_patient_info)
 
     # -> pydantic object -> dict
-    existing_patient_info = patient_pydantic_obj.model_dump(exclude = 'id')
+    existing_patient_info = patient_pydantic_obj.model_dump(exclude = {'id'})
 
     # add this dict to the data
     data[patient_id] = existing_patient_info
